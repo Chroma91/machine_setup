@@ -52,17 +52,20 @@ The supported formats are `YAML` and `JSON`.
 Tasks can be defined under the `tasks` root key.
 Every task can contain an arbitrary number of commands.
 
-| key           | description                                          | values        | default            |
-| ------------- | ---------------------------------------------------- | ------------- | ------------------ |
-| tasks         | root key for all of the tasks                        |               |
-| default_shell | shell that is used when not specified by the command | `bash`, `zsh` | `bash`             |
-| temp_dir      | define where temporary files are stored              |               | `~/.machine_setup` |
+| key           | description                                          | values            | default                      |
+| ------------- | ---------------------------------------------------- | ----------------- | ---------------------------- |
+| tasks         | root key for all of the tasks                        |                   |
+| default_shell | shell that is used when not specified by the command | `bash`, `zsh`     | `bash`                       |
+| temp_dir      | define where temporary files are stored              |                   | `~/.machine_setup`           |
+| parallel      | run all of the tasks in parallel                     | `true` or `false` | `false`                      |
+| num_threads   | number of threads when run in parallel               | numeric > 1       | physical processor count - 1 |
 
 ### Task specific configuration
 
-| key | description                  | values                                                                       | examples                      |
-| --- | ---------------------------- | ---------------------------------------------------------------------------- | ----------------------------- |
-| os  | only run on the specified os | [possible values](https://doc.rust-lang.org/std/env/consts/constant.OS.html) | "linux" or ["linux", "macos"] |
+| key      | description                                                | values                                                                       | examples                      |
+| -------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------- |
+| os       | only run on the specified os                               | [possible values](https://doc.rust-lang.org/std/env/consts/constant.OS.html) | "linux" or ["linux", "macos"] |
+| parallel | run all of the commands in parallel (1 thread per command) | `true` or `false`                                                            | `false`                       |
 
 > TODO: Add JSON examples...
 
@@ -71,9 +74,12 @@ Check out the example configuration below:
 ```yaml
 temp_dir: "~/my_temp" # defaults to "~/.machine_setup"
 default_shell: "zsh" # defaults to "bash"
+parallel: true
+num_threads: 2
 tasks:
   my_task1:
     os: ["linux", "windows"]
+    parallel: true
     commands:
       - copy:
           src: "./src/files"
@@ -84,6 +90,7 @@ tasks:
 
   my_task2:
     os: ["linux"]
+    parallel: true
     commands:
       - shell: "sudo apt-get install git -y"
       - symlink:
@@ -228,30 +235,3 @@ updatable_multiline_command:
         - "sudo apt-get -y uninstall git"
         - ...
 ```
-
----
-
-## TODOs
-
-### 1.1.0
-
-- Improve the terminal output
-  - hide most of it behind a `--verbose` flag
-- make it possible to specify that all commands in a task should be run in parallel (this might be useful when cloning/updating a chunk of repos for example)
-- Add option to run `copy` and `symlink` as root user (needed to move/link some system files)
-
-### 1.2.0
-
-- also make it possible to run tasks in parallel (not only commands inside)
-
-### 2.0.0
-
-[BREAKING]
-
-- all tasks run in parallel by default
-- `dependsOn` can be set for tasks to make them wait for other tasks
-
-### 2.1.0
-
-- conditional tasks
-  - add the ability to add requirements for a task, e.g. only run if a certain file doesn't exist
